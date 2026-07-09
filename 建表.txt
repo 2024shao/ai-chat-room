@@ -1,0 +1,54 @@
+CREATE DATABASE IF NOT EXISTS `chatroom` 
+    DEFAULT CHARACTER SET utf8mb4 
+    DEFAULT COLLATE utf8mb4_unicode_ci;
+
+USE `chatroom`;
+
+CREATE TABLE `user` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
+    `username` VARCHAR(50) UNIQUE NOT NULL COMMENT '昵称（唯一）',
+    `password` VARCHAR(255) NOT NULL COMMENT '密码（BCrypt加密）',
+    `avatar` VARCHAR(500) DEFAULT '/default-avatar.png' COMMENT '头像URL',
+    `role` TINYINT DEFAULT 0 COMMENT '角色：0=普通用户，1=管理员',
+    `status` TINYINT DEFAULT 1 COMMENT '状态：0=禁用，1=正常',
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX `idx_username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
+
+CREATE TABLE `room` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '房间ID',
+    `room_code` CHAR(6) UNIQUE NOT NULL COMMENT '6位房间号（用户加入凭证）',
+    `room_name` VARCHAR(100) NOT NULL COMMENT '房间名称',
+    `owner_id` BIGINT NOT NULL COMMENT '房主ID（关联user.id）',
+    `max_members` INT DEFAULT 50 COMMENT '最大人数限制',
+    `status` TINYINT DEFAULT 1 COMMENT '状态：0=已解散，1=正常',
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX `idx_owner` (`owner_id`),
+    INDEX `idx_room_code` (`room_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='房间表';
+
+CREATE TABLE `message` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+    `message_id` VARCHAR(36) NOT NULL COMMENT '消息UUID（业务唯一ID）',
+    `room_code` CHAR(6) NOT NULL COMMENT '房间号',
+    `user_id` BIGINT NOT NULL COMMENT '发送者ID',
+    `username` VARCHAR(50) NOT NULL COMMENT '发送者昵称（冗余）',
+    `avatar` VARCHAR(500) DEFAULT NULL COMMENT '发送者头像（冗余）',
+    `content` TEXT NOT NULL COMMENT '消息内容',
+    `message_type` TINYINT DEFAULT 0 COMMENT '类型：0=普通，1=系统，2=AI建议，3=撤回',
+    `is_deleted` TINYINT DEFAULT 0 COMMENT '是否删除：0=正常，1=已撤回',
+    `reply_to_id` VARCHAR(36) DEFAULT NULL COMMENT '回复的消息ID（引用 message_id）',
+    `send_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '发送时间',
+    PRIMARY KEY (`id`, `send_time`),
+    INDEX `idx_message_id` (`message_id`),
+    INDEX `idx_room_time` (`room_code`, `send_time` DESC),
+    INDEX `idx_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='消息表'
+PARTITION BY RANGE (YEAR(send_time)) (
+    PARTITION p2025 VALUES LESS THAN (2026),
+    PARTITION p2026 VALUES LESS THAN (2027),
+    PARTITION p2027 VALUES LESS THAN (2028),
+    PARTITION p_future VALUES LESS THAN MAXVALUE
+);
