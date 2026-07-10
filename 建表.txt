@@ -1,9 +1,54 @@
+<<<<<<< HEAD
+=======
+-- ============================================
+-- 1. 连接到MySQL（使用root或管理员账号）
+-- ============================================
+-- mysql -u root -p
+
+-- ============================================
+-- 2. 创建用户 aichat 并设置密码
+-- ============================================
+-- 先检查用户是否存在，如果存在则删除
+DROP USER IF EXISTS 'aichat'@'localhost';
+DROP USER IF EXISTS 'aichat'@'%';
+
+-- 创建用户（允许本地和远程访问）
+CREATE USER 'aichat'@'localhost' IDENTIFIED BY '123456';
+CREATE USER 'aichat'@'%' IDENTIFIED BY '123456';
+
+-- ============================================
+-- 3. 创建数据库 chatroom
+-- ============================================
+>>>>>>> 57b391d80c4096df96202420ae003cb048d82d47
 CREATE DATABASE IF NOT EXISTS `chatroom` 
     DEFAULT CHARACTER SET utf8mb4 
     DEFAULT COLLATE utf8mb4_unicode_ci;
 
+<<<<<<< HEAD
 USE `chatroom`;
 
+=======
+-- ============================================
+-- 4. 授权给用户 aichat
+-- ============================================
+-- 授予所有权限（本地访问）
+GRANT ALL PRIVILEGES ON `chatroom`.* TO 'aichat'@'localhost';
+
+-- 授予所有权限（远程访问）
+GRANT ALL PRIVILEGES ON `chatroom`.* TO 'aichat'@'%';
+
+-- 刷新权限
+FLUSH PRIVILEGES;
+
+-- ============================================
+-- 5. 切换到 chatroom 数据库
+-- ============================================
+USE `chatroom`;
+
+-- ============================================
+-- 6. 创建用户表
+-- ============================================
+>>>>>>> 57b391d80c4096df96202420ae003cb048d82d47
 CREATE TABLE `user` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
     `username` VARCHAR(50) UNIQUE NOT NULL COMMENT '昵称（唯一）',
@@ -16,6 +61,12 @@ CREATE TABLE `user` (
     INDEX `idx_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
+<<<<<<< HEAD
+=======
+-- ============================================
+-- 7. 创建房间表
+-- ============================================
+>>>>>>> 57b391d80c4096df96202420ae003cb048d82d47
 CREATE TABLE `room` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '房间ID',
     `room_code` CHAR(6) UNIQUE NOT NULL COMMENT '6位房间号（用户加入凭证）',
@@ -29,6 +80,12 @@ CREATE TABLE `room` (
     INDEX `idx_room_code` (`room_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='房间表';
 
+<<<<<<< HEAD
+=======
+-- ============================================
+-- 8. 创建消息表（带分区）
+-- ============================================
+>>>>>>> 57b391d80c4096df96202420ae003cb048d82d47
 CREATE TABLE `message` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '自增主键',
     `message_id` VARCHAR(36) NOT NULL COMMENT '消息UUID（业务唯一ID）',
@@ -50,4 +107,31 @@ PARTITION BY RANGE (YEAR(send_time)) (
     PARTITION p2025 VALUES LESS THAN (2026),
     PARTITION p2026 VALUES LESS THAN (2027),
     PARTITION p2027 VALUES LESS THAN (2028),
+<<<<<<< HEAD
     PARTITION p_future VALUES LESS THAN MAXVALUE
+=======
+    PARTITION p_future VALUES LESS THAN MAXVALUE
+);
+
+-- ============================================
+-- 9. 验证数据库和表是否创建成功
+-- ============================================
+SHOW DATABASES;
+USE chatroom;
+SHOW TABLES;
+DESCRIBE user;
+DESCRIBE room;
+DESCRIBE message;
+
+-- ============================================
+-- 10. 查看用户权限
+-- ============================================
+SHOW GRANTS FOR 'aichat'@'localhost';
+SHOW GRANTS FOR 'aichat'@'%';
+
+-- ============================================
+-- 11. 测试插入数据（可选）
+-- ============================================
+-- INSERT INTO `user` (`username`, `password`) VALUES ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi');
+-- INSERT INTO `room` (`room_code`, `room_name`, `owner_id`) VALUES ('ABCDEF', '测试房间', 1);
+>>>>>>> 57b391d80c4096df96202420ae003cb048d82d47
