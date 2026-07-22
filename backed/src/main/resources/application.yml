@@ -20,3 +20,8 @@ logging:
   level:
     com.example.aichatroom: DEBUG
     org.springframework: INFO
+jwt:
+  # 密钥（至少32位，建议使用复杂字符串）
+  secret: your-secret-key-here-at-least-32-characters-long
+  # 过期时间：7天（单位：毫秒）
+  expiration: 604800000
