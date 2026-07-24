@@ -181,6 +181,19 @@ public class RoomServiceImpl implements RoomService {
         return buildRoomResponse(room);
     }
 
+    @Override
+    public List<RoomResponse> getMyRooms(Long userId) {
+        List<RoomMember> myMembers = roomMemberMapper.selectList(new LambdaQueryWrapper<RoomMember>()
+                .eq(RoomMember::getUserId, userId));
+
+        return myMembers.stream().map(member -> {
+            Room room = roomMapper.selectOne(new LambdaQueryWrapper<Room>()
+                    .eq(Room::getRoomCode, member.getRoomCode()));
+            if (room == null) return null;
+            return buildRoomResponse(room);
+        }).filter(r -> r != null).collect(Collectors.toList());
+    }
+
     private String generateRoomCode() {
         String code;
         do {

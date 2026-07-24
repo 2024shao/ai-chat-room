@@ -72,3 +72,7 @@ export async function disbandRoom(roomCode) {
 export async function getRoom(roomCode) {
   return request(`/api/room/${roomCode}`);
 }
+
+export async function getMyRooms() {
+  return request('/api/room/my-rooms');
+}

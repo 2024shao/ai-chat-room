@@ -1,5 +1,7 @@
 package com.example.aichatroom.controller;
 
+import java.util.List;
+
 import com.example.aichatroom.common.Result;
 import com.example.aichatroom.dto.CreateRoomRequest;
 import com.example.aichatroom.dto.JoinRoomRequest;
@@ -87,12 +89,24 @@ public class RoomController {
 
     @Operation(summary = "查询房间信息")
     @GetMapping("/{roomCode}")
-    public Result<RoomResponse> getRoom(@Parameter(description = "6位房间号") @PathVariable String roomCode) {
+    public Result<RoomResponse> getRoom(@PathVariable String roomCode) {
         try {
             RoomResponse response = roomService.getRoom(roomCode);
             return Result.success(response);
         } catch (RuntimeException e) {
             return Result.error(404, e.getMessage());
+        }
+    }
+
+    @Operation(summary = "查询我加入的房间列表")
+    @GetMapping("/my-rooms")
+    public Result<List<RoomResponse>> getMyRooms(HttpServletRequest httpRequest) {
+        try {
+            Long userId = (Long) httpRequest.getAttribute("userId");
+            List<RoomResponse> rooms = roomService.getMyRooms(userId);
+            return Result.success(rooms);
+        } catch (RuntimeException e) {
+            return Result.error(400, e.getMessage());
         }
     }
 }

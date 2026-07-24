@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { createRoom, joinRoom, leaveRoom, disbandRoom, getRoom } from '../utils/api'
+import { createRoom, joinRoom, leaveRoom, disbandRoom, getRoom, getMyRooms } from '../utils/api'
 
 const router = useRouter()
 const user = ref(null)
@@ -11,14 +11,26 @@ const messageType = ref('')
 const createForm = reactive({ roomName: '', maxMembers: 10 })
 const joinForm = reactive({ roomCode: '' })
 const currentRoom = ref(null)
-const rooms = ref([])
+const myRooms = ref([])
 
-onMounted(() => {
+onMounted(async () => {
   const userStr = localStorage.getItem('user')
   if (userStr) {
     user.value = JSON.parse(userStr)
   }
+  await loadMyRooms()
 })
+
+async function loadMyRooms() {
+  try {
+    const response = await getMyRooms()
+    if (response.code === 200) {
+      myRooms.value = response.data || []
+    }
+  } catch (error) {
+    // 静默失败
+  }
+}
 
 function showMessage(msg, type = 'info') {
   message.value = msg
@@ -37,6 +49,7 @@ async function handleCreateRoom() {
       currentRoom.value = response.data
       showMessage(`房间创建成功！房间号：${response.data.roomCode}`, 'success')
       createForm.roomName = ''
+      await loadMyRooms()
     } else {
       showMessage(response.message, 'error')
     }
@@ -56,6 +69,7 @@ async function handleJoinRoom() {
       currentRoom.value = response.data
       showMessage('加入成功', 'success')
       joinForm.roomCode = ''
+      await loadMyRooms()
     } else {
       showMessage(response.message, 'error')
     }
@@ -71,6 +85,7 @@ async function handleLeaveRoom() {
     if (response.code === 200) {
       showMessage(response.message, 'success')
       currentRoom.value = null
+      await loadMyRooms()
     } else {
       showMessage(response.message, 'error')
     }
@@ -86,6 +101,7 @@ async function handleDisbandRoom() {
     if (response.code === 200) {
       showMessage('房间已解散', 'success')
       currentRoom.value = null
+      await loadMyRooms()
     } else {
       showMessage(response.message, 'error')
     }
@@ -104,6 +120,10 @@ async function handleRefreshRoom() {
   } catch (error) {
     showMessage('刷新失败', 'error')
   }
+}
+
+function selectRoom(room) {
+  currentRoom.value = room
 }
 
 function logout() {
@@ -146,6 +166,25 @@ function logout() {
           <input v-model="joinForm.roomCode" type="text" placeholder="输入6位房间号" maxlength="6" class="input" />
         </div>
         <button @click="handleJoinRoom" class="btn btn-primary btn-block">加入房间</button>
+      </div>
+
+      <div v-if="myRooms.length > 0" class="card">
+        <h3>我的房间 ({{ myRooms.length }})</h3>
+        <div class="room-list">
+          <div
+            v-for="room in myRooms"
+            :key="room.roomCode"
+            :class="['room-card', { active: currentRoom?.roomCode === room.roomCode }]"
+            @click="selectRoom(room)"
+          >
+            <div class="room-card-code">{{ room.roomCode }}</div>
+            <div class="room-card-name">{{ room.roomName }}</div>
+            <div class="room-card-meta">
+              <span>{{ room.ownerName }}{{ room.ownerId === user?.id ? ' (房主)' : '' }}</span>
+              <span>{{ room.currentMembers }}/{{ room.maxMembers }}人</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div v-if="currentRoom" class="card room-detail">
@@ -325,5 +364,44 @@ function logout() {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid #eee;
+}
+.room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.room-card {
+  padding: 12px 16px;
+  border: 2px solid #eee;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.room-card:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+.room-card.active {
+  border-color: #667eea;
+  background: #f0f2ff;
+}
+.room-card-code {
+  font-size: 16px;
+  font-weight: 700;
+  color: #667eea;
+  letter-spacing: 2px;
+}
+.room-card-name {
+  font-size: 14px;
+  color: #333;
+  margin: 4px 0;
+}
+.room-card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #999;
 }
 </style>
