@@ -1,9 +1,8 @@
 <script setup>
-import AuthTest from './components/AuthTest.vue'
 </script>
 
 <template>
-  <AuthTest />
+  <router-view />
 </template>
 
 <style>
